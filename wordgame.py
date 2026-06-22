@@ -197,6 +197,9 @@ class WordGame:
         self.game_state.append(round)
 
     def _set_prefs(self, args):
+        if args.alphabetic:
+            self.qwerty = False
+
         if args.words_file:
             if not os.path.isfile(args.words_file):
                 sys.exit(f"Word file not found: {args.words_file}")
@@ -229,6 +232,13 @@ def get_args():
         nargs="?",
         default="words.txt",
         help="The path to the file which contains the word list to play with"
+    )
+
+    parser.add_argument(
+        "-a",
+        "--alphabetic",
+        action="store_true",
+        help="Disables QWERTY layout for letter display",
     )
 
     group = parser.add_mutually_exclusive_group()

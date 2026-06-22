@@ -33,7 +33,7 @@ class WordGame:
             if len(self.game_state) == len(self.word) + 1:
                 if not self.win:
                     self._lose()
-                break
+                    break
             print(msg)
         self._display()
 
@@ -54,7 +54,9 @@ class WordGame:
         layout = string.ascii_uppercase
         pad_sz = 0
         if self.qwerty:
-            layout = "Q W E R T Y U I O P\n A S D F G H J K L\n  Z X C V B N M"
+            layout = (
+                "Q W E R T Y U I O P\n A S D F G H J K L\n   Z X C V B N M"
+            )
             pad_sz = 5
         output = [""]
         for c in list(layout):
@@ -157,7 +159,7 @@ class WordGame:
         if "-" not in self.hint:
             return ""
         while True:
-            idx = random.randint(0, self.word_len)
+            idx = random.randint(0, self.word_len - 1)
             if self.hint[idx] != "-":
                 continue
             self.hint[idx] = self.word[idx]

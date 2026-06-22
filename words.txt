@@ -577,6 +577,7 @@ cover
 crack
 craft
 crane
+crate
 cream
 creek
 crisp

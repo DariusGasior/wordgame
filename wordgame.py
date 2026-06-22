@@ -1,75 +1,62 @@
 #!/usr/bin/env python3
+import argparse
 import os
 import random
 import string
 import sys
 
+
 def get_small_words():
     words = [
-    "about", "board", "brain", "brave", "bright", "bring", "catch", "chalk",
-    "class", "clean", "climb", "dance", "dream", "drink", "earth", "every",
-    "found", "fresh", "giant", "grand", "grass", "green", "happy", "laugh",
-    "learn", "light", "lucky", "never", "paper", "place", "plant", "quick",
-    "rhyme", "right", "rules", "scale", "share", "shine", "small", "smile",
-    "story", "study", "sweet", "teach", "thank", "think", "under", "water",
+        "about", "board", "brain", "brave", "bright", "bring", "catch", "chalk",
+        "class", "clean", "climb", "dance", "dream", "drink", "earth", "every",
+        "found", "fresh", "giant", "grand", "grass", "green", "happy", "laugh",
+        "learn", "light", "lucky", "never", "paper", "place", "plant", "quick",
+        "rhyme", "right", "rules", "scale", "share", "shine", "small", "smile",
+        "story", "study", "sweet", "teach", "thank", "think", "under", "water",
         "write", "young",
     ]
     return [word.upper() for word in set(words)]
 
 
 class WordGame:
-    def __init__(self):
-        os.system('clear')
-        self.words = self.get_words()
+    def __init__(self, args):
+        self.word_file = 'words.txt'
+        self._init_system()
+        self._init_colors()
+        self._init_keyboard()
         self.win = False
         self.hint = False
         self.qwerty = True
+        self.forced_word = ''
+        self._set_prefs(args)
+        self.words = self.get_words()
         self.new_game()
-        self.init_colors()
-        self.init_keyboard()
-
-    def init_colors(self):
-        self.green = "\033[32;1m"
-        self.yellow = "\033[38;2;201;180;88;40m"
-        self.yellow = "\033[38;2;223;194;64;40m"
-        self.dkgray = "\033[38;5;244;40m"
-        self.ltgray = "\033[37m"
-        self.reset = "\033[0m"
-
-        self.correct = self.green
-        self.matched = self.yellow
-        self.unused = self.ltgray
-        self.notthere = self.dkgray
-
-    def init_keyboard(self):
-        self.keyboard = {}
-        for c in list(string.ascii_uppercase):
-            self.keyboard[c] = self.unused
 
     def get_words(self, word_len=5):
-        fname = 'words_kids_3.txt'
-        fname = 'words.txt'
+        fname = self.word_file
+        if not os.path.isfile(fname):
+            sys.exit(f"Word file not found {fname}")
         with open(fname, 'r') as f:
-            words = [line.strip() for line in f.readlines() if len(line.strip()) == word_len]
+            words = [line.strip() for line in f.readlines()
+                     if len(line.strip()) == word_len]
         return [word.upper() for word in set(words)]
 
     def new_game(self):
+
+        os.system(self.clear_cmd)
         print()
         self.playing = True
         self.history = set()
         self.game_state = []
-        if '-d' in sys.argv:
-            self.hint = True
-            self.words = ["DRAKE", "CLANG", "CHANG", "GUMBO", "CARDS"] + self.words
-            self.word = self.words[0]
-        else:
-            self.word = random.choice(self.words)
-        if '-w' in sys.argv:
-            try:
-                self.word = sys.argv[sys.argv.index('-w') + 1].upper()
+
+        self.word = random.choice(self.words)
+
+        if self.forced_word:
+            if len(self.forced_word) == len(self.words[0]):
+                self.word = self.forced_word
+                self.words.append(self.forced_word)
                 self.hint = True
-            except Exception as e:
-                pass
 
     def new_round(self):
         hint = ''
@@ -154,13 +141,14 @@ class WordGame:
             print(f"{padding}{line}")
 
     def lose(self):
-        print(f"Sorry, you didn't win. The word was {self.correct}{self.word}{self.reset}")
+        print(f"Sorry, you didn't win. The word was {
+              self.correct}{self.word}{self.reset}")
 
     def play(self):
         while self.playing:
             self.display()
             result, msg = self.new_round()
-            os.system('clear')
+            os.system(self.clear_cmd)
             if len(self.game_state) == len(self.word) + 1:
                 if not self.win:
                     self.lose()
@@ -168,12 +156,72 @@ class WordGame:
             print(msg)
         self.display()
 
+    def _init_colors(self):
+        self.green = "\033[32;1m"
+        self.yellow = "\033[38;2;201;180;88;40m"
+        self.yellow = "\033[38;2;223;194;64;40m"
+        self.dkgray = "\033[38;5;244;40m"
+        self.ltgray = "\033[37m"
+        self.reset = "\033[0m"
+
+        self.correct = self.green
+        self.matched = self.yellow
+        self.unused = self.ltgray
+        self.notthere = self.dkgray
+
+    def _init_keyboard(self):
+        self.keyboard = {}
+        for c in list(string.ascii_uppercase):
+            self.keyboard[c] = self.unused
+
+    def _init_system(self):
+        platform = sys.platform
+        self.clear_cmd = 'clear'
+        if 'win' in platform:
+            self.clear_cmd = 'cls'
+
+    def _set_prefs(self, args):
+        if args.words_file:
+            if not os.path.isfile(args.words_file):
+                sys.exit(f"Word file not found: {args.words_file}")
+            self.word_file = args.words_file
+
+        if args.word:
+            if not all([c in string.ascii_uppercase for c in args.word.upper()]):
+                sys.exit("Forced words must only contain letters")
+            self.forced_word = args.word.upper()
+
+
 def play_wordgame():
-    game = WordGame()
+    args = get_args()
+    game = WordGame(args)
     game.play()
+
+
+def get_args():
+    parser = argparse.ArgumentParser(
+        description="A terminal-based word guessing game"
+    )
+
+    parser.add_file = parser.add_argument(
+        "words_file",
+        nargs="?",
+        default="words.txt",
+        help="The path to the file which contains the word list to play with"
+    )
+
+    parser.add_argument(
+        "-w", "--word",
+        type=str,
+        help=("Force the word to use for the game. "
+              "Word list file must contain words of the same length.")
+    )
+    return parser.parse_args()
+
 
 def main():
     play_wordgame()
+
 
 if __name__ == "__main__":
     main()

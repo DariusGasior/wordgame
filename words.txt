@@ -27,6 +27,7 @@ dad
 day
 did
 dig
+dip
 dog
 dot
 dry
@@ -72,16 +73,22 @@ paw
 pay
 pen
 pet
+pie
 pig
+pin
+pop
 red
 row
 run
+sat
 sea
+set
 sky
 sun
 ten
 tip
 toe
+ton
 top
 use
 van
@@ -235,6 +242,7 @@ hand
 hard
 hare
 harm
+harp
 have
 hawk
 head
@@ -356,6 +364,7 @@ pony
 pool
 port
 pull
+punk
 pure
 push
 race
@@ -419,6 +428,7 @@ tail
 take
 talk
 tall
+tame
 tank
 team
 tear
@@ -492,6 +502,7 @@ actor
 adapt
 after
 again
+agile
 agree
 alarm
 album
@@ -533,6 +544,7 @@ brave
 bread
 break
 brick
+bride
 bring
 broad
 brown
@@ -641,6 +653,7 @@ grass
 great
 green
 greet
+grind
 group
 guard
 guess
@@ -729,6 +742,7 @@ pilot
 pizza
 place
 plain
+plank
 plant
 plate
 point

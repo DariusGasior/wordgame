@@ -196,7 +196,11 @@ class WordGame:
         if guess == self.word:
             self.win = True
             self.playing = False
-            return (None, "You Win!")
+            msg = "You Win!"
+            hints_taken = self.word_len - self.hint.count("-")
+            if hints_taken:
+                msg += f" Hints needed: {hints_taken}"
+            return (None, msg)
         return (None, "")
 
     def _process(self, guess):

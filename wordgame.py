@@ -6,58 +6,24 @@ import string
 import sys
 
 
-def get_small_words():
-    words = [
-        "about", "board", "brain", "brave", "bright", "bring", "catch", "chalk",
-        "class", "clean", "climb", "dance", "dream", "drink", "earth", "every",
-        "found", "fresh", "giant", "grand", "grass", "green", "happy", "laugh",
-        "learn", "light", "lucky", "never", "paper", "place", "plant", "quick",
-        "rhyme", "right", "rules", "scale", "share", "shine", "small", "smile",
-        "story", "study", "sweet", "teach", "thank", "think", "under", "water",
-        "write", "young",
-    ]
-    return [word.upper() for word in set(words)]
-
-
 class WordGame:
     def __init__(self, args):
+        self.hint = False
+        self.win = False
         self.word_file = 'words.txt'
         self.word_len = 5
+        self.forced_word = ''
+        self.qwerty = True
         self._set_prefs(args)
         self._init_system()
         self._init_colors()
         self._init_keyboard()
         self._init_words()
-        self.win = False
-        self.hint = False
-        self.qwerty = True
-        self.forced_word = ''
-        self.new_game()
+        self._new_game()
 
     @property
     def words(self):
         return self.word_sets[self.word_len]
-
-    def new_game(self):
-
-        os.system(self.clear_cmd)
-        print()
-        self.playing = True
-        self.history = set()
-        self.game_state = []
-
-        self.word = random.choice(list(self.words))
-
-        if self.forced_word:
-            if len(self.forced_word) not in self.word_sets:
-                sys.exit(
-                    (f"No words in {self.word_file} match the "
-                     f"length of the forced word {self.forced_word}")
-                )
-            self._insert_word(self.forced_word)
-            self.word = self.forced_word
-            self.word_len = len(self.word)
-            self.hint = True
 
     def new_round(self):
         hint = ''
@@ -119,27 +85,8 @@ class WordGame:
         for _ in range((len(self.word) + 1) - len(self.game_state)):
             print(padding + ' '.join(['-'] * len(self.word)))
         print('')
-        self.draw_keyboard()
+        self._draw_keyboard()
         print('')
-
-    def draw_keyboard(self):
-        layout = string.ascii_uppercase
-        pad_sz = 0
-        if self.qwerty:
-            layout = "Q W E R T Y U I O P\n A S D F G H J K L\n  Z X C V B N M"
-            pad_sz = 5
-        output = ['']
-        for c in list(layout):
-            if c in self.keyboard:
-                output[-1] += f"{self.keyboard[c]}{c}{self.reset}"
-            elif c == '\n':
-                output.append('')
-            else:
-                output[-1] += c
-
-        for line in output:
-            padding = " " * pad_sz
-            print(f"{padding}{line}")
 
     def lose(self):
         print(f"Sorry, you didn't win. The word was {
@@ -159,7 +106,6 @@ class WordGame:
 
     def _init_colors(self):
         self.green = "\033[32;1m"
-        self.yellow = "\033[38;2;201;180;88;40m"
         self.yellow = "\033[38;2;223;194;64;40m"
         self.dkgray = "\033[38;5;244;40m"
         self.ltgray = "\033[37m"
@@ -174,6 +120,12 @@ class WordGame:
         self.keyboard = {}
         for c in list(string.ascii_uppercase):
             self.keyboard[c] = self.unused
+
+    def _init_system(self):
+        platform = sys.platform
+        self.clear_cmd = 'clear'
+        if 'win' in platform:
+            self.clear_cmd = 'cls'
 
     def _init_words(self):
         fname = self.word_file
@@ -197,17 +149,52 @@ class WordGame:
                  f"found in {self.word_file}.")
             )
 
-    def _init_system(self):
-        platform = sys.platform
-        self.clear_cmd = 'clear'
-        if 'win' in platform:
-            self.clear_cmd = 'cls'
+    def _draw_keyboard(self):
+        layout = string.ascii_uppercase
+        pad_sz = 0
+        if self.qwerty:
+            layout = ("Q W E R T Y U I O P\n"
+                      " A S D F G H J K L\n"
+                      "  Z X C V B N M")
+            pad_sz = 5
+        output = ['']
+        for c in list(layout):
+            if c in self.keyboard:
+                output[-1] += f"{self.keyboard[c]}{c}{self.reset}"
+            elif c == '\n':
+                output.append('')
+            else:
+                output[-1] += c
+
+        for line in output:
+            padding = " " * pad_sz
+            print(f"{padding}{line}")
 
     def _insert_word(self, word):
         try:
             self.word_sets[len(word)].add(word)
         except KeyError:
             sys.exit(f"No word list for words of length {len(word)}")
+
+    def _new_game(self):
+        os.system(self.clear_cmd)
+        print()
+        self.playing = True
+        self.history = set()
+        self.game_state = []
+
+        self.word = random.choice(list(self.words))
+
+        if self.forced_word:
+            if len(self.forced_word) not in self.word_sets:
+                sys.exit(
+                    (f"No words in {self.word_file} match the "
+                     f"length of the forced word {self.forced_word}")
+                )
+            self._insert_word(self.forced_word)
+            self.word = self.forced_word
+            self.word_len = len(self.word)
+            self.hint = True
 
     def _set_prefs(self, args):
         if args.words_file:
@@ -216,7 +203,9 @@ class WordGame:
             self.word_file = args.words_file
 
         if args.word:
-            if not all([c in string.ascii_uppercase for c in args.word.upper()]):
+            if not all(
+                [c in string.ascii_uppercase for c in args.word.upper()]
+            ):
                 sys.exit("Forced words must only contain letters")
             self.forced_word = args.word.upper()
 

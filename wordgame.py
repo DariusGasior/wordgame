@@ -22,25 +22,21 @@ def get_small_words():
 class WordGame:
     def __init__(self, args):
         self.word_file = 'words.txt'
+        self.word_len = 5
+        self._set_prefs(args)
         self._init_system()
         self._init_colors()
         self._init_keyboard()
+        self._init_words()
         self.win = False
         self.hint = False
         self.qwerty = True
         self.forced_word = ''
-        self._set_prefs(args)
-        self.words = self.get_words()
         self.new_game()
 
-    def get_words(self, word_len=5):
-        fname = self.word_file
-        if not os.path.isfile(fname):
-            sys.exit(f"Word file not found {fname}")
-        with open(fname, 'r') as f:
-            words = [line.strip() for line in f.readlines()
-                     if len(line.strip()) == word_len]
-        return [word.upper() for word in set(words)]
+    @property
+    def words(self):
+        return self.word_sets[self.word_len]
 
     def new_game(self):
 
@@ -50,13 +46,18 @@ class WordGame:
         self.history = set()
         self.game_state = []
 
-        self.word = random.choice(self.words)
+        self.word = random.choice(list(self.words))
 
         if self.forced_word:
-            if len(self.forced_word) == len(self.words[0]):
-                self.word = self.forced_word
-                self.words.append(self.forced_word)
-                self.hint = True
+            if len(self.forced_word) not in self.word_sets:
+                sys.exit(
+                    (f"No words in {self.word_file} match the "
+                     f"length of the forced word {self.forced_word}")
+                )
+            self._insert_word(self.forced_word)
+            self.word = self.forced_word
+            self.word_len = len(self.word)
+            self.hint = True
 
     def new_round(self):
         hint = ''
@@ -174,11 +175,39 @@ class WordGame:
         for c in list(string.ascii_uppercase):
             self.keyboard[c] = self.unused
 
+    def _init_words(self):
+        fname = self.word_file
+        if not os.path.isfile(fname):
+            sys.exit(f"Word file not found {fname}")
+        self.word_sets = {}
+        try:
+            with open(fname, 'r') as f:
+                for line in f.readlines():
+                    word = line.strip()
+                    word_len = len(word)
+                    if word_len not in self.word_sets:
+                        self.word_sets[word_len] = set()
+                    self.word_sets[word_len].add(word.upper())
+        except Exception as e:
+            sys.exit(f"Error getting words from {fname}. {e=}")
+
+        if self.word_len not in self.word_sets:
+            sys.exit(
+                (f"No words of lengh {self.word_len} "
+                 f"found in {self.word_file}.")
+            )
+
     def _init_system(self):
         platform = sys.platform
         self.clear_cmd = 'clear'
         if 'win' in platform:
             self.clear_cmd = 'cls'
+
+    def _insert_word(self, word):
+        try:
+            self.word_sets[len(word)].add(word)
+        except KeyError:
+            sys.exit(f"No word list for words of length {len(word)}")
 
     def _set_prefs(self, args):
         if args.words_file:
@@ -190,6 +219,9 @@ class WordGame:
             if not all([c in string.ascii_uppercase for c in args.word.upper()]):
                 sys.exit("Forced words must only contain letters")
             self.forced_word = args.word.upper()
+
+        if args.num_letters:
+            self.word_len = args.num_letters
 
 
 def play_wordgame():
@@ -210,12 +242,22 @@ def get_args():
         help="The path to the file which contains the word list to play with"
     )
 
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group()
+
+    group.add_argument(
         "-w", "--word",
         type=str,
         help=("Force the word to use for the game. "
               "Word list file must contain words of the same length.")
     )
+
+    group.add_argument(
+        "-n", "--num-letters",
+        type=int,
+        help=("Specify a word length for the game. "
+              "Word list file must contain words of the same length.")
+    )
+
     return parser.parse_args()
 
 

@@ -10,9 +10,9 @@ class WordGame:
     def __init__(self, args):
         self.hint = False
         self.win = False
-        self.word_file = 'words.txt'
+        self.word_file = "words.txt"
         self.word_len = 5
-        self.forced_word = ''
+        self.forced_word = ""
         self.qwerty = True
         self._set_prefs(args)
         self._init_system()
@@ -38,32 +38,30 @@ class WordGame:
         self._display()
 
     def _display(self):
-        padding = ' ' * ((26 - len(self.word)) // 2)
+        padding = " " * ((26 - len(self.word)) // 2)
         for row in self.game_state:
-            print(padding, end='')
-            for i, c in enumerate(list(row['char'])):
-                print(f"{row['status'][i]}{c}{self.reset} ", end='')
-            print('')
+            print(padding, end="")
+            for i, c in enumerate(list(row["char"])):
+                print(f"{row['status'][i]}{c}{self.reset} ", end="")
+            print("")
         for _ in range((len(self.word) + 1) - len(self.game_state)):
-            print(padding + ' '.join(['-'] * len(self.word)))
-        print('')
+            print(padding + " ".join(["-"] * len(self.word)))
+        print("")
         self._draw_keyboard()
-        print('')
+        print("")
 
     def _draw_keyboard(self):
         layout = string.ascii_uppercase
         pad_sz = 0
         if self.qwerty:
-            layout = ("Q W E R T Y U I O P\n"
-                      " A S D F G H J K L\n"
-                      "  Z X C V B N M")
+            layout = "Q W E R T Y U I O P\n A S D F G H J K L\n  Z X C V B N M"
             pad_sz = 5
-        output = ['']
+        output = [""]
         for c in list(layout):
             if c in self.keyboard:
                 output[-1] += f"{self.keyboard[c]}{c}{self.reset}"
-            elif c == '\n':
-                output.append('')
+            elif c == "\n":
+                output.append("")
             else:
                 output[-1] += c
 
@@ -90,9 +88,9 @@ class WordGame:
 
     def _init_system(self):
         platform = sys.platform
-        self.clear_cmd = 'clear'
-        if 'win' in platform:
-            self.clear_cmd = 'cls'
+        self.clear_cmd = "clear"
+        if "win" in platform:
+            self.clear_cmd = "cls"
 
     def _init_words(self):
         fname = self.word_file
@@ -100,7 +98,7 @@ class WordGame:
             sys.exit(f"Word file not found {fname}")
         self.word_sets = {}
         try:
-            with open(fname, 'r') as f:
+            with open(fname, "r") as f:
                 for line in f.readlines():
                     word = line.strip()
                     word_len = len(word)
@@ -112,8 +110,10 @@ class WordGame:
 
         if self.word_len not in self.word_sets:
             sys.exit(
-                (f"No words of lengh {self.word_len} "
-                 f"found in {self.word_file}.")
+                (
+                    f"No words of lengh {self.word_len} "
+                    f"found in {self.word_file}."
+                )
             )
 
     def _insert_word(self, word):
@@ -123,8 +123,11 @@ class WordGame:
             sys.exit(f"No word list for words of length {len(word)}")
 
     def _lose(self):
-        print(f"Sorry, you didn't win. The word was {
-              self.correct}{self.word}{self.reset}")
+        print(
+            f"Sorry, you didn't win. The word was {self.correct}{self.word}{
+                self.reset
+            }"
+        )
 
     def _new_game(self):
         os.system(self.clear_cmd)
@@ -138,8 +141,10 @@ class WordGame:
         if self.forced_word:
             if len(self.forced_word) not in self.word_sets:
                 sys.exit(
-                    (f"No words in {self.word_file} match the "
-                     f"length of the forced word {self.forced_word}")
+                    (
+                        f"No words in {self.word_file} match the "
+                        f"length of the forced word {self.forced_word}"
+                    )
                 )
             self._insert_word(self.forced_word)
             self.word = self.forced_word
@@ -147,12 +152,12 @@ class WordGame:
             self.hint = True
 
     def _new_round(self):
-        hint = ''
+        hint = ""
         if self.hint:
-            hint = f'({self.word}) '
+            hint = f"({self.word}) "
         guess = input(f"{hint}Enter your word: ").strip().upper()
 
-        if guess == '?':
+        if guess == "?":
             self.hint = True
             return (None, "You're cheating")
         if len(guess) == 0:
@@ -177,23 +182,23 @@ class WordGame:
         return (None, "")
 
     def _process(self, guess):
-        round = {'char': [], 'status': []}
+        round = {"char": [], "status": []}
         letters = list(guess)
         word = list(self.word)
         for i, c in enumerate(letters):
             if c == word[i]:
                 status = self.correct
                 self.keyboard[c] = self.correct
-                word[i] = ' '
+                word[i] = " "
             elif c in word:
                 status = self.matched
-                word[word.index(c)] = ' '
+                word[word.index(c)] = " "
             else:
                 status = self.notthere
             if self.keyboard[c] != self.correct:
                 self.keyboard[c] = status
-            round['char'].append(c)
-            round['status'].append(status)
+            round["char"].append(c)
+            round["status"].append(status)
         self.game_state.append(round)
 
     def _set_prefs(self, args):
@@ -231,7 +236,7 @@ def get_args():
         "words_file",
         nargs="?",
         default="words.txt",
-        help="The path to the file which contains the word list to play with"
+        help="The path to the file which contains the word list to play with",
     )
 
     parser.add_argument(
@@ -244,17 +249,23 @@ def get_args():
     group = parser.add_mutually_exclusive_group()
 
     group.add_argument(
-        "-w", "--word",
+        "-w",
+        "--word",
         type=str,
-        help=("Force the word to use for the game. "
-              "Word list file must contain words of the same length.")
+        help=(
+            "Force the word to use for the game. "
+            "Word list file must contain words of the same length."
+        ),
     )
 
     group.add_argument(
-        "-n", "--num-letters",
+        "-n",
+        "--num-letters",
         type=int,
-        help=("Specify a word length for the game. "
-              "Word list file must contain words of the same length.")
+        help=(
+            "Specify a word length for the game. "
+            "Word list file must contain words of the same length."
+        ),
     )
 
     return parser.parse_args()

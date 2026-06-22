@@ -8,7 +8,7 @@ import sys
 
 class WordGame:
     def __init__(self, args):
-        self.hint = False
+        self.hint = []
         self.win = False
         self.word_file = "words.txt"
         self.word_len = 5
@@ -149,17 +149,33 @@ class WordGame:
             self._insert_word(self.forced_word)
             self.word = self.forced_word
             self.word_len = len(self.word)
-            self.hint = True
+            self.hint = list(self.word)
+
+    def _new_hint(self):
+        if len(self.hint) < self.word_len:
+            self.hint = ["-"] * self.word_len
+        if "-" not in self.hint:
+            return ""
+        while True:
+            idx = random.randint(0, self.word_len)
+            if self.hint[idx] != "-":
+                continue
+            self.hint[idx] = self.word[idx]
+            return self.word[idx]
 
     def _new_round(self):
         hint = ""
         if self.hint:
-            hint = f"({self.word}) "
+            hint = f"Hint: ({''.join(self.hint)}) "
         guess = input(f"{hint}Enter your word: ").strip().upper()
 
         if guess == "?":
-            self.hint = True
-            return (None, "You're cheating")
+            hint = self._new_hint()
+            msg = "No more hints available"
+            if hint:
+                msg = f"Your hint was the letter '{hint}'"
+            return (None, msg)
+
         if len(guess) == 0:
             self.playing = False
             return (None, "Thank you for playing")

@@ -25,57 +25,19 @@ class WordGame:
     def words(self):
         return self.word_sets[self.word_len]
 
-    def new_round(self):
-        hint = ''
-        if self.hint:
-            hint = f'({self.word}) '
-        guess = input(f"{hint}Enter your word: ").strip().upper()
+    def play(self):
+        while self.playing:
+            self._display()
+            result, msg = self._new_round()
+            os.system(self.clear_cmd)
+            if len(self.game_state) == len(self.word) + 1:
+                if not self.win:
+                    self._lose()
+                break
+            print(msg)
+        self._display()
 
-        if guess == '?':
-            self.hint = True
-            return (None, "You're cheating")
-        if len(guess) == 0:
-            self.playing = False
-            return (None, "Thank you for playing")
-
-        if len(guess) != len(self.word):
-            return (None, f"Words must be {len(self.word)} letters long")
-
-        if guess not in self.words:
-            return (None, "Word not in wordlist")
-
-        if guess in self.history:
-            return (None, f"You already tried {guess}")
-
-        self.process(guess)
-        self.history.add(guess)
-        if guess == self.word:
-            self.win = True
-            self.playing = False
-            return (None, "You Win!")
-        return (None, "")
-
-    def process(self, guess):
-        round = {'char': [], 'status': []}
-        letters = list(guess)
-        word = list(self.word)
-        for i, c in enumerate(letters):
-            if c == word[i]:
-                status = self.correct
-                self.keyboard[c] = self.correct
-                word[i] = ' '
-            elif c in word:
-                status = self.matched
-                word[word.index(c)] = ' '
-            else:
-                status = self.notthere
-            if self.keyboard[c] != self.correct:
-                self.keyboard[c] = status
-            round['char'].append(c)
-            round['status'].append(status)
-        self.game_state.append(round)
-
-    def display(self):
+    def _display(self):
         padding = ' ' * ((26 - len(self.word)) // 2)
         for row in self.game_state:
             print(padding, end='')
@@ -88,21 +50,26 @@ class WordGame:
         self._draw_keyboard()
         print('')
 
-    def lose(self):
-        print(f"Sorry, you didn't win. The word was {
-              self.correct}{self.word}{self.reset}")
+    def _draw_keyboard(self):
+        layout = string.ascii_uppercase
+        pad_sz = 0
+        if self.qwerty:
+            layout = ("Q W E R T Y U I O P\n"
+                      " A S D F G H J K L\n"
+                      "  Z X C V B N M")
+            pad_sz = 5
+        output = ['']
+        for c in list(layout):
+            if c in self.keyboard:
+                output[-1] += f"{self.keyboard[c]}{c}{self.reset}"
+            elif c == '\n':
+                output.append('')
+            else:
+                output[-1] += c
 
-    def play(self):
-        while self.playing:
-            self.display()
-            result, msg = self.new_round()
-            os.system(self.clear_cmd)
-            if len(self.game_state) == len(self.word) + 1:
-                if not self.win:
-                    self.lose()
-                break
-            print(msg)
-        self.display()
+        for line in output:
+            padding = " " * pad_sz
+            print(f"{padding}{line}")
 
     def _init_colors(self):
         self.green = "\033[32;1m"
@@ -149,32 +116,15 @@ class WordGame:
                  f"found in {self.word_file}.")
             )
 
-    def _draw_keyboard(self):
-        layout = string.ascii_uppercase
-        pad_sz = 0
-        if self.qwerty:
-            layout = ("Q W E R T Y U I O P\n"
-                      " A S D F G H J K L\n"
-                      "  Z X C V B N M")
-            pad_sz = 5
-        output = ['']
-        for c in list(layout):
-            if c in self.keyboard:
-                output[-1] += f"{self.keyboard[c]}{c}{self.reset}"
-            elif c == '\n':
-                output.append('')
-            else:
-                output[-1] += c
-
-        for line in output:
-            padding = " " * pad_sz
-            print(f"{padding}{line}")
-
     def _insert_word(self, word):
         try:
             self.word_sets[len(word)].add(word)
         except KeyError:
             sys.exit(f"No word list for words of length {len(word)}")
+
+    def _lose(self):
+        print(f"Sorry, you didn't win. The word was {
+              self.correct}{self.word}{self.reset}")
 
     def _new_game(self):
         os.system(self.clear_cmd)
@@ -195,6 +145,56 @@ class WordGame:
             self.word = self.forced_word
             self.word_len = len(self.word)
             self.hint = True
+
+    def _new_round(self):
+        hint = ''
+        if self.hint:
+            hint = f'({self.word}) '
+        guess = input(f"{hint}Enter your word: ").strip().upper()
+
+        if guess == '?':
+            self.hint = True
+            return (None, "You're cheating")
+        if len(guess) == 0:
+            self.playing = False
+            return (None, "Thank you for playing")
+
+        if len(guess) != len(self.word):
+            return (None, f"Words must be {len(self.word)} letters long")
+
+        if guess not in self.words:
+            return (None, "Word not in wordlist")
+
+        if guess in self.history:
+            return (None, f"You already tried {guess}")
+
+        self._process(guess)
+        self.history.add(guess)
+        if guess == self.word:
+            self.win = True
+            self.playing = False
+            return (None, "You Win!")
+        return (None, "")
+
+    def _process(self, guess):
+        round = {'char': [], 'status': []}
+        letters = list(guess)
+        word = list(self.word)
+        for i, c in enumerate(letters):
+            if c == word[i]:
+                status = self.correct
+                self.keyboard[c] = self.correct
+                word[i] = ' '
+            elif c in word:
+                status = self.matched
+                word[word.index(c)] = ' '
+            else:
+                status = self.notthere
+            if self.keyboard[c] != self.correct:
+                self.keyboard[c] = status
+            round['char'].append(c)
+            round['status'].append(status)
+        self.game_state.append(round)
 
     def _set_prefs(self, args):
         if args.words_file:

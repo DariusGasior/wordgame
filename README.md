@@ -8,3 +8,5 @@ A simple terminal-based word guessing game
 - `-w, --word` Sets the secret word for the game. Used for testing. The word list must contain words of the same length. Cannot be used with `-n`.
 
 - `-a, --alphabetic` Disables QWERTY keyboard letter layout.
+
+![Wordgame Screenshot](images/wordgame.png)

@@ -1,7 +1,11 @@
 # WordGame CLI
 A simple terminal-based word guessing game
 
-*Usage:* wordgame.py [wordlist.txt]
+**Usage:** wordgame.py [-h] [-n NUM_LETTERS] [-w WORD] [-a] [wordlist.txt]
+
+![Wordgame Screenshot](images/wordgame.png)
+
+
 ## Options
 - `-n, --num-letters` Sets the size of the words used for the game. The word list file must contain words of this length. The default is word length is 5. Cannot be used with `-w`.
 
@@ -9,4 +13,4 @@ A simple terminal-based word guessing game
 
 - `-a, --alphabetic` Disables QWERTY keyboard letter layout.
 
-![Wordgame Screenshot](images/wordgame.png)
+- `wordlist.txt` Optional path to a word list file. Files containing words of mixed lengths are supported.
